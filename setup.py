@@ -29,7 +29,9 @@ setup(
     scripts=[],
     setup_requires=['pytest-runner'],
     install_requires=[
-
+        'jupyter==1.0.0',
+        'torch==1.0.1.post2',
+        'torchvision==0.2.2.post3',
     ],
     tests_require=['pytest'],
     cmdclass={'test': PyTest},
