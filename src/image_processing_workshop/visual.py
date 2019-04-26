@@ -5,15 +5,17 @@ import numpy as np
 import torch
 
 
-def imshow(image, ax=None, title=None, normalize=True):
+def plot_image(img, ax=None, title=None, normalize=True):
     if ax is None:
-        fig, ax = plt.subplots()
-    if isinstance(image, torch.Tensor):
-        image = image.numpy()
-    if len(image.shape) == 3:
-        image = image[0]
+        fig = plt.figure(figsize=(5, 5))
+        ax = plt.gca()
+    if isinstance(img, torch.Tensor):
+        img = img.numpy()
+    if len(img.shape) == 3:
+        img = img[0]
+    img = img.reshape(28, 28)
 
-    ax.imshow(image, cmap='gray')
+    ax.imshow(img, cmap='gray')
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     ax.spines['left'].set_visible(False)
@@ -23,12 +25,34 @@ def imshow(image, ax=None, title=None, normalize=True):
     ax.set_yticklabels('')
     return ax
 
+def plot_classify(img, model):
+    if img.shape[0] != 1:
+        img = img.unsqueeze(dim=0)
+    model.eval()
+    ps = model(img).detach().numpy().squeeze()
 
-def view_recon(img, recon):
-    ''' Function for displaying an image (as a PyTorch Tensor) and its
-        reconstruction also a PyTorch Tensor
-    '''
+    fig, (ax1, ax2) = plt.subplots(figsize=(10, 10), ncols=2)
+    ax1.imshow(img.resize_(1, 28, 28).numpy().squeeze(), cmap='gray')
+    ax1.axis('off')
+    ax2.barh(np.arange(10), ps)
+    ax2.set_aspect(0.1)
+    ax2.set_yticks(np.arange(10))
+    ax2.set_yticklabels(['T-shirt/top',
+                        'Trouser',
+                        'Pullover',
+                        'Dress',
+                        'Coat',
+                        'Sandal',
+                        'Shirt',
+                        'Sneaker',
+                        'Bag',
+                        'Ankle Boot'], size='small');
+    ax2.set_title('Class Probability')
+    ax2.set_xlim(0, 1.1)
+    plt.tight_layout()
 
+
+def plot_recon(img, recon):
     fig, axes = plt.subplots(ncols=2, sharex=True, sharey=True)
     axes[0].imshow(img.numpy().squeeze())
     axes[1].imshow(recon.data.numpy().squeeze())
@@ -36,36 +60,9 @@ def view_recon(img, recon):
         ax.axis('off')
         ax.set_adjustable('box-forced')
 
-def view_classify(img, ps, version="MNIST"):
-    ''' Function for viewing an image and it's predicted classes.
-    '''
-    ps = ps.data.numpy().squeeze()
-
-    fig, (ax1, ax2) = plt.subplots(figsize=(6,9), ncols=2)
-    ax1.imshow(img.resize_(1, 28, 28).numpy().squeeze())
-    ax1.axis('off')
-    ax2.barh(np.arange(10), ps)
-    ax2.set_aspect(0.1)
-    ax2.set_yticks(np.arange(10))
-    if version == "MNIST":
-        ax2.set_yticklabels(np.arange(10))
-    elif version == "Fashion":
-        ax2.set_yticklabels(['T-shirt/top',
-                            'Trouser',
-                            'Pullover',
-                            'Dress',
-                            'Coat',
-                            'Sandal',
-                            'Shirt',
-                            'Sneaker',
-                            'Bag',
-                            'Ankle Boot'], size='small');
-    ax2.set_title('Class Probability')
-    ax2.set_xlim(0, 1.1)
-    plt.tight_layout()
 
 
-def plot_examples(df, image_shape=(28, 28)):
+def plot_df_examples(df, image_shape=(28, 28)):
     examples_count = min(25, len(df))
     cols = 5
     rows = np.ceil(examples_count / cols)
@@ -86,11 +83,9 @@ def plot_examples(df, image_shape=(28, 28)):
         ax.axes.set_axis_off()
 
 
-def plot_coocurance_matrix(df, use_log=False, use_top3=False):
-    if use_top3:
-        coocurance_cols = ['label_class_name', 'predicted_class_name_top3']
-    else:
-        coocurance_cols = ['label_class_name', 'predicted_class_name_top1']
+def plot_coocurance_matrix(df, use_log=False):
+
+    coocurance_cols = ['label_class_name', 'predicted_class_name_top1']
     coocurance_df = pd.pivot_table(df[coocurance_cols], index=coocurance_cols[0],
                                    columns=coocurance_cols[1], aggfunc=len, fill_value=0)
     if use_log:

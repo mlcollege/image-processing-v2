@@ -2,43 +2,37 @@ import pandas as pd
 import numpy as np
 
 
-def get_info_df(labels, predictions, class_id2class_name_mapping, images=None):
-    if labels.shape != predictions.shape:
-        raise AttributeError("Labels and preds shape mismatch")
-    example_count = labels.shape[0]
+def get_results_df(model, test_loader):
+    model.eval()
 
-    label_class_ids = np.argmax(labels, axis=1).tolist()
-    label_class_names = [class_id2class_name_mapping[c_id] for c_id in label_class_ids]
-    label_class_scores = predictions[np.arange(example_count), label_class_ids].tolist()
+    label_class_ids = []
+    label_class_scores = []
+    predicted_class_ids = []
+    predicted_class_scores = []
+    all_images = []
 
-    predicted_class_ids_top1 = np.argmax(predictions, axis=1).tolist()
-    predicted_class_names_top1 = [class_id2class_name_mapping[c_id] for c_id in predicted_class_ids_top1]
-    predicted_class_scores_top1 = np.max(predictions, axis=1).tolist()
+    for images, labels in  test_loader:
+        b_label_class_ids = labels.detach().numpy()
+        label_class_ids += b_label_class_ids.tolist()
+        b_predictions = model(images).detach().numpy()
+        b_predicted_class_ids = np.argmax(b_predictions, axis=1)
+        predicted_class_ids += b_predicted_class_ids.tolist()
+        b_predicted_class_scores = np.max(b_predictions, axis=1)
+        predicted_class_scores += b_predicted_class_scores.tolist()
+        b_label_class_scores = b_predictions[np.arange(b_label_class_ids.shape[0]), b_label_class_ids]
+        label_class_scores += b_label_class_scores.tolist()
+        b_images = images.detach().numpy().reshape((-1, 28, 28))
+        all_images += b_images.tolist()
 
-    predicted_class_ids_top3 = np.argsort(predictions, axis=1)[:, -3:].tolist()
-    predicted_class_names_top3 = []
-
-    selection_class_ids_top3 = []
-    for label_class_id, predicted_class_ids_triplet in zip(label_class_ids, predicted_class_ids_top3):
-        if label_class_id in predicted_class_ids_triplet:
-            class_id = label_class_id
-        else:
-            class_id = predicted_class_ids_triplet[2]
-        selection_class_ids_top3.append(class_id)
-        predicted_class_names_top3.append(class_id2class_name_mapping[class_id])
-    predicted_class_scores_top3 = predictions[np.arange(example_count), selection_class_ids_top3].tolist()
-
-    if images is None:
-        images = [None for img in range(example_count)]
+    label_class_names = [test_loader.dataset.classes[c_id] for c_id in label_class_ids]
+    predicted_class_names = [test_loader.dataset.classes[c_id] for c_id in predicted_class_ids]
 
     return pd.DataFrame(
         {'label_class_name': label_class_names,
          'label_class_score': label_class_scores,
-         'predicted_class_name_top1': predicted_class_names_top1,
-         'predicted_class_score_top1': predicted_class_scores_top1,
-         'predicted_class_name_top3': predicted_class_names_top3,
-         'predicted_class_score_top3': predicted_class_scores_top3,
-         'image': list(images)}
+         'predicted_class_name_top1': predicted_class_names,
+         'predicted_class_score_top1': predicted_class_scores,
+         'image': [np.array(img) for img in all_images]}
     )
 
 
@@ -58,17 +52,26 @@ def get_precision(df, class_name):
     return round(true_positives / positives * 100, 2)
 
 
-def get_accuracy(df, use_top3=False):
-    if use_top3:
-        return round(float(np.mean((df.label_class_name == df.predicted_class_name_top3).astype(int))) * 100, 2)
+def get_accuracy(df):
     return round(float(np.mean((df.label_class_name == df.predicted_class_name_top1).astype(int))) * 100, 2)
 
-def get_rec_prec(df, class_id2class_name_mapping):
+def get_rec_prec(df, class_names=None):
+    if class_names is None:
+        class_names = ['T-shirt/top',
+                       'Trouser',
+                       'Pullover',
+                       'Dress',
+                       'Coat',
+                       'Sandal',
+                       'Shirt',
+                       'Sneaker',
+                       'Bag',
+                       'Ankle boot']
     return pd.DataFrame(
         {
-            "class_name": [class_name for class_name in class_id2class_name_mapping.values()],
-            "recall": [get_recall(df, class_name) for class_name in class_id2class_name_mapping.values()],
-            "precision": [get_precision(df, class_name) for class_name in class_id2class_name_mapping.values()]
+            "class_name": [class_name for class_name in class_names],
+            "recall": [get_recall(df, class_name) for class_name in class_names],
+            "precision": [get_precision(df, class_name) for class_name in class_names]
         })
 
 
