@@ -34,8 +34,8 @@ setup(
         'torchvision==0.2.2.post3',
         'matplotlib==3.0.3',
         'seaborn-0.9.0',
-        'tqdm==4.31.1'
-
+        'tqdm==4.31.1',
+        'tensorflow==1.13.1'
     ],
     tests_require=['pytest'],
     cmdclass={'test': PyTest},
