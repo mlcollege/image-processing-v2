@@ -5,17 +5,21 @@ import numpy as np
 import torch
 
 
-def plot_image(img, ax=None, title=None, normalize=True):
+def plot_image(img, ax=None, title=None, normalize=True, is_grayscale=True, reshape=[28, 28]):
     if ax is None:
-        fig = plt.figure(figsize=(5, 5))
+        fig = plt.figure(figsize=(10, 10))
         ax = plt.gca()
     if isinstance(img, torch.Tensor):
-        img = img.numpy()
-    if len(img.shape) == 3:
+        img = img.detach().numpy()
+    if (len(img.shape) == 3 and is_grayscale) or (len(img.shape) == 4 and not is_grayscale):
         img = img[0]
-    img = img.reshape(28, 28)
+    if reshape:
+        img = img.reshape(*reshape)
 
-    ax.imshow(img, cmap='gray')
+    if is_grayscale:
+        ax.imshow(img, cmap='gray')
+    else:
+        ax.imshow(img)
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     ax.spines['left'].set_visible(False)
