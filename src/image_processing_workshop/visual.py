@@ -5,9 +5,9 @@ import numpy as np
 import torch
 
 
-def plot_image(img, ax=None, title=None, normalize=True, is_grayscale=True, reshape=[28, 28]):
+def plot_image(img, ax=None, title=None, normalize=True, is_grayscale=True, reshape=None, figsize=(10, 10)):
     if ax is None:
-        fig = plt.figure(figsize=(10, 10))
+        fig = plt.figure(figsize=figsize)
         ax = plt.gca()
     if isinstance(img, torch.Tensor):
         img = img.detach().numpy()
