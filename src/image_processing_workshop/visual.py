@@ -11,8 +11,6 @@ def plot_image(img, ax=None, title=None, normalize=True, is_grayscale=True, resh
         ax = plt.gca()
     if isinstance(img, torch.Tensor):
         img = img.detach().numpy()
-    if (len(img.shape) == 3 and is_grayscale) or (len(img.shape) == 4 and not is_grayscale):
-        img = img[0]
     if reshape:
         img = img.reshape(*reshape)
 
@@ -29,11 +27,13 @@ def plot_image(img, ax=None, title=None, normalize=True, is_grayscale=True, resh
     ax.set_yticklabels('')
     return ax
 
-def plot_classify(img, model):
-    if img.shape[0] != 1:
-        img = img.unsqueeze(dim=0)
+def plot_classify(img, model, exp=False):
+    img = img.unsqueeze(dim=0)
     model.eval()
-    ps = model(img).detach().numpy().squeeze()
+    ps = model(img)
+    if exp:
+        ps = torch.exp(ps)
+    ps = ps.detach().numpy().squeeze()
 
     fig, (ax1, ax2) = plt.subplots(figsize=(10, 10), ncols=2)
     ax1.imshow(img.resize_(1, 28, 28).numpy().squeeze(), cmap='gray')

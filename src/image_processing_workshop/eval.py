@@ -1,8 +1,9 @@
 import pandas as pd
 import numpy as np
+import torch
 
 
-def get_results_df(model, test_loader):
+def get_results_df(model, test_loader, exp=False):
     model.eval()
 
     label_class_ids = []
@@ -14,7 +15,10 @@ def get_results_df(model, test_loader):
     for images, labels in  test_loader:
         b_label_class_ids = labels.detach().numpy()
         label_class_ids += b_label_class_ids.tolist()
-        b_predictions = model(images).detach().numpy()
+        b_predictions = model(images)
+        if exp:
+            b_predictions = torch.exp(b_predictions)
+        b_predictions = b_predictions.detach().numpy()
         b_predicted_class_ids = np.argmax(b_predictions, axis=1)
         predicted_class_ids += b_predicted_class_ids.tolist()
         b_predicted_class_scores = np.max(b_predictions, axis=1)
