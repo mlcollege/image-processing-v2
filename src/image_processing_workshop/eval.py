@@ -3,7 +3,7 @@ import numpy as np
 import torch
 
 
-def get_results_df(model, test_loader, exp=False):
+def get_results_df(model, test_loader):
     model.eval()
 
     label_class_ids = []
@@ -12,12 +12,10 @@ def get_results_df(model, test_loader, exp=False):
     predicted_class_scores = []
     all_images = []
 
-    for images, labels in  test_loader:
+    for images, labels in test_loader:
         b_label_class_ids = labels.detach().numpy()
         label_class_ids += b_label_class_ids.tolist()
         b_predictions = model(images)
-        if exp:
-            b_predictions = torch.exp(b_predictions)
         b_predictions = b_predictions.detach().numpy()
         b_predicted_class_ids = np.argmax(b_predictions, axis=1)
         predicted_class_ids += b_predicted_class_ids.tolist()
@@ -25,7 +23,7 @@ def get_results_df(model, test_loader, exp=False):
         predicted_class_scores += b_predicted_class_scores.tolist()
         b_label_class_scores = b_predictions[np.arange(b_label_class_ids.shape[0]), b_label_class_ids]
         label_class_scores += b_label_class_scores.tolist()
-        b_images = images.detach().numpy().reshape((-1, 28, 28))
+        b_images = images.detach().numpy()
         all_images += b_images.tolist()
 
     label_class_names = [test_loader.dataset.classes[c_id] for c_id in label_class_ids]

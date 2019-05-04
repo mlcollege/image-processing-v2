@@ -1,20 +1,29 @@
-import pandas as pd
-import seaborn as sns
 import matplotlib.pylab as plt
 import numpy as np
+import pandas as pd
+import seaborn as sns
 import torch
 
 
-def plot_image(img, ax=None, title=None, normalize=True, is_grayscale=True, reshape=None, figsize=(10, 10)):
-    if ax is None:
-        fig = plt.figure(figsize=figsize)
-        ax = plt.gca()
-    if isinstance(img, torch.Tensor):
-        img = img.detach().numpy()
-    if reshape:
-        img = img.reshape(*reshape)
+def plot_image(input_tensor, image_shape=None, figsize=(10, 10)):
+    # Type check.
+    if isinstance(input_tensor, torch.Tensor):
+        img = input_tensor.detach().numpy()
+    else:
+        img = input_tensor
 
-    if is_grayscale:
+    # Reshaping
+    if image_shape:
+        img = img.reshape(*image_shape)
+    elif len(img.shape) == 3 and img.shape[0] in [1, 3]:
+        img = np.transpose(img, (1, 2, 0))
+        # Get rid of 1 shape in grayscale because of imshow
+        if img.shape[2] == 1:
+            img = img.reshape(img.shape[0], img.shape[1])
+
+    fig = plt.figure(figsize=figsize)
+    ax = plt.gca()
+    if img.shape[-1] != 3:
         ax.imshow(img, cmap='gray')
     else:
         ax.imshow(img)
@@ -27,46 +36,51 @@ def plot_image(img, ax=None, title=None, normalize=True, is_grayscale=True, resh
     ax.set_yticklabels('')
     return ax
 
-def plot_classify(img, model, exp=False):
-    img = img.unsqueeze(dim=0)
-    model.eval()
-    ps = model(img)
-    if exp:
-        ps = torch.exp(ps)
-    ps = ps.detach().numpy().squeeze()
 
-    fig, (ax1, ax2) = plt.subplots(figsize=(10, 10), ncols=2)
-    ax1.imshow(img.resize_(1, 28, 28).numpy().squeeze(), cmap='gray')
+def plot_classify(input_tensor, model, image_shape=None, figsize=(10, 10), topn=10, category_names=None):
+    # Transform input_tensor to batch and make predicton.
+    input_tensor = input_tensor.unsqueeze(dim=0)
+    model.eval()
+    predictions = model(input_tensor)
+    predictions = predictions.detach().numpy().squeeze()
+
+    # Preselct topn predictions.
+    if category_names is None:
+        category_names = ['T-shirt/top', 'Trouser', 'Pullover',
+                          'Dress', 'Coat', 'Sandal', 'Shirt',
+                          'Sneaker', 'Bag', 'Ankle Boot']
+    category_names = np.array(category_names)
+    topn_pos = predictions.argsort()[::-1][:topn]
+    topn_names = category_names[topn_pos].tolist()
+    topn_preds = predictions[topn_pos]
+
+    img = input_tensor.detach().numpy().squeeze()
+    # Reshaping
+    if image_shape:
+        img = img.reshape(*image_shape)
+    elif len(img.shape) == 3 and img.shape[0] in [1, 3]:
+        img = np.transpose(img, (1, 2, 0))
+        # Get rid of 1 shape in grayscale because of imshow
+        if img.shape[2] == 1:
+            img = img.reshape(img.shape[0], img.shape[1])
+
+    fig, (ax1, ax2) = plt.subplots(figsize=figsize, ncols=2)
+    if img.shape[-1] != 3:
+        ax1.imshow(img, cmap='gray')
+    else:
+        ax1.imshow(img)
+    ax1.imshow(img, cmap='gray')
     ax1.axis('off')
-    ax2.barh(np.arange(10), ps)
+    ax2.barh(np.arange(topn), topn_preds)
     ax2.set_aspect(0.1)
-    ax2.set_yticks(np.arange(10))
-    ax2.set_yticklabels(['T-shirt/top',
-                        'Trouser',
-                        'Pullover',
-                        'Dress',
-                        'Coat',
-                        'Sandal',
-                        'Shirt',
-                        'Sneaker',
-                        'Bag',
-                        'Ankle Boot'], size='small');
+    ax2.set_yticks(np.arange(topn))
+    ax2.set_yticklabels(topn_names, size='small')
     ax2.set_title('Class Probability')
     ax2.set_xlim(0, 1.1)
     plt.tight_layout()
 
 
-def plot_recon(img, recon):
-    fig, axes = plt.subplots(ncols=2, sharex=True, sharey=True)
-    axes[0].imshow(img.numpy().squeeze())
-    axes[1].imshow(recon.data.numpy().squeeze())
-    for ax in axes:
-        ax.axis('off')
-        ax.set_adjustable('box-forced')
-
-
-
-def plot_df_examples(df, image_shape=(28, 28)):
+def plot_df_examples(df, image_shape=None):
     examples_count = min(25, len(df))
     cols = 5
     rows = np.ceil(examples_count / cols)
@@ -78,10 +92,22 @@ def plot_df_examples(df, image_shape=(28, 28)):
         img = df.image.iloc[img_id]
         if img is None:
             continue
-        img = img.reshape(image_shape)
+
+        # Reshaping
+        if image_shape:
+            img = img.reshape(*image_shape)
+        elif len(img.shape) == 3 and img.shape[0] in [1, 3]:
+            img = np.transpose(img, (1, 2, 0))
+            # Get rid of 1 shape in grayscale because of imshow
+            if img.shape[2] == 1:
+                img = img.reshape(img.shape[0], img.shape[1])
+
         prediction_name = df.predicted_class_name_top1.iloc[img_id]
         prediction_score = df.predicted_class_score_top1.iloc[img_id]
-
+        if img.shape[-1] != 3:
+            ax.imshow(img, cmap='gray')
+        else:
+            ax.imshow(img)
         ax.imshow(img, cmap='gray')
         ax.set_title("{0}: {1}".format(prediction_name, round(prediction_score, 2)))
         ax.axes.set_axis_off()
