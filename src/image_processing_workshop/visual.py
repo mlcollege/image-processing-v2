@@ -26,6 +26,11 @@ def plot_image(input_tensor, image_shape=None, figsize=(10, 10)):
     if img.shape[-1] != 3:
         ax.imshow(img, cmap='gray')
     else:
+        if img.min() < 0:
+            mean = np.array([0.485, 0.456, 0.406])
+            std = np.array([0.229, 0.224, 0.225])
+            img = std * img + mean
+            img = np.clip(img, 0, 1)
         ax.imshow(img)
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
@@ -49,6 +54,7 @@ def plot_classify(input_tensor, model, image_shape=None, figsize=(10, 10), topn=
         category_names = ['T-shirt/top', 'Trouser', 'Pullover',
                           'Dress', 'Coat', 'Sandal', 'Shirt',
                           'Sneaker', 'Bag', 'Ankle Boot']
+    topn = min(topn, len(category_names))
     category_names = np.array(category_names)
     topn_pos = predictions.argsort()[::-1][:topn]
     topn_names = category_names[topn_pos].tolist()
@@ -68,6 +74,11 @@ def plot_classify(input_tensor, model, image_shape=None, figsize=(10, 10), topn=
     if img.shape[-1] != 3:
         ax1.imshow(img, cmap='gray')
     else:
+        if img.min() < 0:
+            mean = np.array([0.485, 0.456, 0.406])
+            std = np.array([0.229, 0.224, 0.225])
+            img = std * img + mean
+            img = np.clip(img, 0, 1)
         ax1.imshow(img)
     ax1.imshow(img, cmap='gray')
     ax1.axis('off')
@@ -107,6 +118,11 @@ def plot_df_examples(df, image_shape=None):
         if img.shape[-1] != 3:
             ax.imshow(img, cmap='gray')
         else:
+            if img.min() < 0:
+                mean = np.array([0.485, 0.456, 0.406])
+                std = np.array([0.229, 0.224, 0.225])
+                img = std * img + mean
+                img = np.clip(img, 0, 1)
             ax.imshow(img)
         ax.imshow(img, cmap='gray')
         ax.set_title("{0}: {1}".format(prediction_name, round(prediction_score, 2)))
