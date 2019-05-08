@@ -8,6 +8,55 @@ import tqdm
 import urllib.request
 
 
+def get_patch(patch_id=None, use_cache=True, resize=None):
+    url = "https://pbs.twimg.com/media/DSU7iNMU8AAciHy.png"
+    mapping = {
+        0: [0, 0],
+        1: [0, 1],
+        2: [1, 0],
+        3: [0, 1]
+    }
+
+    cache_path = './patch.npy'
+    if use_cache and os.path.exists(cache_path):
+        patches = np.load(cache_path)
+    else:
+        patches = get_image_from_url(url, resize=[224, 224, 3])
+
+    row_id, col_id = mapping.get(patch_id, [None, None])
+    if row_id is None:
+        return patches
+    else:
+        patch = patches[row_id*112: (row_id+1)*112, col_id*112: (col_id+1)*112, :]
+        if resize:
+            patch = Image.fromarray(patch)
+            if len(resize) >= 2:
+                patch = patch.resize((resize[1], resize[0]))
+            else:
+                patch = patch.resize([resize[0], int(patch.size[1] / patch.size[0] * resize[0])])
+        return np.array(patch).astype("uint8")
+
+
+
+def apply_patch(img, patch, pos_w=0, pos_h=0):
+    img_shape = img.shape
+    patch_shape = patch.shape
+    if img_shape[0] < patch_shape[0] or img_shape[1] < patch_shape[1]:
+        return img
+
+    if pos_w + patch.shape[1] >= img.shape[1]:
+        pos_w = img.shape[1] - patch.shape[1]
+    if pos_h + patch.shape[0] >= img.shape[0]:
+        pos_h = img.shape[0] - patch.shape[0]
+
+    patch_ids = np.where(patch > 0)
+    img_ids = (patch_ids[0]+pos_h, patch_ids[1]+pos_w, patch_ids[2])
+
+    corrupted_img = img.copy()
+    corrupted_img[img_ids] = patch[patch_ids]
+    return corrupted_img
+
+
 def get_image_from_url(url, resize=None, to_grayscale=False):
     response = requests.get(url)
     if response.status_code == 200:
@@ -20,7 +69,10 @@ def get_image_from_url(url, resize=None, to_grayscale=False):
     else:
         img = img.convert('RGB')
     if resize:
-        img = img.resize((resize[1], resize[0]))
+        if len(resize) >= 2:
+            img = img.resize((resize[1], resize[0]))
+        else:
+            img = img.resize([resize[0], int(img.size[1] / img.size[0] * resize[0])])
     return np.array(img).astype("uint8")
 
 
