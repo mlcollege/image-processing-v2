@@ -3,7 +3,7 @@ import numpy as np
 import torch
 
 
-def get_results_df(model, test_loader):
+def get_results_df(model, valid_loader):
     model.eval()
 
     label_class_ids = []
@@ -12,7 +12,7 @@ def get_results_df(model, test_loader):
     predicted_class_scores = []
     all_images = []
 
-    for images, labels in test_loader:
+    for images, labels in valid_loader:
         b_label_class_ids = labels.detach().numpy()
         label_class_ids += b_label_class_ids.tolist()
         b_predictions = model(images)
@@ -26,8 +26,8 @@ def get_results_df(model, test_loader):
         b_images = images.detach().numpy()
         all_images += b_images.tolist()
 
-    label_class_names = [test_loader.dataset.classes[c_id] for c_id in label_class_ids]
-    predicted_class_names = [test_loader.dataset.classes[c_id] for c_id in predicted_class_ids]
+    label_class_names = [valid_loader.dataset.classes[c_id] for c_id in label_class_ids]
+    predicted_class_names = [valid_loader.dataset.classes[c_id] for c_id in predicted_class_ids]
 
     return pd.DataFrame(
         {'label_class_name': label_class_names,
