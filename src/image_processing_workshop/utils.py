@@ -6,6 +6,7 @@ from PIL import Image
 import requests
 import tqdm
 import urllib.request
+import socket
 
 
 def get_patch(patch_id=None, use_cache=True, resize=None):
@@ -115,8 +116,10 @@ def image_is_ok(file):
 
 
 def scrape_urls(url_file, category_name, root_folder='./dataset'):
+    old_timeout = socket.getdefaulttimeout()
+    socket.setdefaulttimeout(15)
     successed = 0
-    failed  = 0
+    failed = 0
 
     train_valid_id = 0
     train_valid = ['train', 'valid']
@@ -141,6 +144,7 @@ def scrape_urls(url_file, category_name, root_folder='./dataset'):
             successed += 1
             train_valid_id = (train_valid_id + 1) % 2
 
+    socket.setdefaulttimeout(old_timeout)
     print(f'Failed {failed}\nSucc {successed}')
     return (os.path.join(root_folder, train_valid[0], category_name),
             os.path.join(root_folder, train_valid[1], category_name))
