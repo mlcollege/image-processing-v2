@@ -115,24 +115,25 @@ def image_is_ok(file):
         return False
 
 
-def scrape_urls(url_file, category_name, root_folder='./dataset'):
+def scrape_urls(url_file, category_name, root_folder='./dataset', valid_rate=3):
     old_timeout = socket.getdefaulttimeout()
     socket.setdefaulttimeout(15)
+
     successed = 0
     failed = 0
 
-    train_valid_id = 0
-    train_valid = ['train', 'valid']
+    scraped_image_count = 0
+    subfolder = 'train'
 
-    os.makedirs(os.path.join(root_folder, train_valid[0], category_name), exist_ok=True)
-    os.makedirs(os.path.join(root_folder, train_valid[1], category_name), exist_ok=True)
+    os.makedirs(os.path.join(root_folder, 'train', category_name), exist_ok=True)
+    os.makedirs(os.path.join(root_folder, 'valid', category_name), exist_ok=True)
 
     for url in tqdm.tqdm(open(url_file, 'r').readlines()):
         url = url.strip()
-        file_name = url.split('/')[-1].split('.', 2)[0]+'.jpg'
+        file_name = url.split('/')[-1].split('.', 2)[0] + '.jpg'
 
         try:
-            path = os.path.join(root_folder, train_valid[train_valid_id], category_name, file_name)
+            path = os.path.join(root_folder, subfolder, category_name, file_name)
             urllib.request.urlretrieve(url, path)
             if not image_is_ok(path):
                 os.remove(path)
@@ -142,9 +143,13 @@ def scrape_urls(url_file, category_name, root_folder='./dataset'):
             failed += 1
         else:
             successed += 1
-            train_valid_id = (train_valid_id + 1) % 2
+            scraped_image_count = (scraped_image_count + 1) % valid_rate
+            if scraped_image_count == 0:
+                subfolder = 'valid'
+            else:
+                subfolder = 'train'
 
     socket.setdefaulttimeout(old_timeout)
     print(f'Failed {failed}\nSucc {successed}')
-    return (os.path.join(root_folder, train_valid[0], category_name),
-            os.path.join(root_folder, train_valid[1], category_name))
+    return (os.path.join(root_folder, 'train', category_name),
+            os.path.join(root_folder, 'valid', category_name))
