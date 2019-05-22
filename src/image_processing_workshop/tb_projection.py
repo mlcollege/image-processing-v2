@@ -6,6 +6,7 @@ from tensorflow.contrib.tensorboard.plugins import projector
 from PIL import Image
 from tensorflow.keras.models import Model
 
+
 def get_sprite_img(images, image_shape=[28, 28]):
     image_cout = len(images)
     h, w = image_shape[:2]
@@ -61,12 +62,12 @@ def setup_embedding_projection(model, images, labels, log_dir, class_names=None,
         class_names = ['T-shirt/top', 'Trouser', 'Pullover', 'Dress', 'Coat', 'Sandal', 'Shirt', 'Sneaker', 'Bag', 'Ankle boot']
 
     # Extract class names for test data.
-    path_for_metadata =  os.path.join(log_dir,'metadata.tsv')
+    path_for_metadata = os.path.join(log_dir, 'metadata.tsv')
     label_class_names = get_label_class_names(labels, class_names)
     save_label_class_names(label_class_names, path_for_metadata)
 
     # Extract sprite images for test data.
-    path_for_sprites =  os.path.join(log_dir,'digits.png')
+    path_for_sprites = os.path.join(log_dir, 'digits.png')
     sprite_image = get_sprite_img(images)
     save_sprite_image(sprite_image, path_for_sprites)
 
@@ -81,7 +82,7 @@ def setup_embedding_projection(model, images, labels, log_dir, class_names=None,
     embedding.tensor_name = embedding_var.name
     embedding.metadata_path = 'metadata.tsv'
     embedding.sprite.image_path = 'digits.png'
-    embedding.sprite.single_image_dim.extend([28,28])
+    embedding.sprite.single_image_dim.extend([28, 28])
 
     # Say that you want to visualise the embeddings
     projector.visualize_embeddings(summary_writer, config)
