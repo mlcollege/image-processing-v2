@@ -1,0 +1,10 @@
+.dockerignoredatetime.
+Dockerfile
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+.cache
+.eggs
+.idea
