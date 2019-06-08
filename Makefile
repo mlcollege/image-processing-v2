@@ -7,7 +7,7 @@ run:
 	docker run -it -p 9997:8000 -p 6006:6006 -v $(shell pwd)/notebooks:/image_processing_workshop/notebooks $(NAME) ./run.sh
 
 run_terminal:
-	docker run -it $(NAME) /bin/bash
+	docker run -it -p 9997:8000 -p 6006:6006 -v $(shell pwd)/notebooks:/image_processing_workshop/notebooks $(NAME) /bin/bash
 
 stop:
 	docker stop $(NAME)
@@ -21,4 +21,4 @@ push:
 	docker push $(NAME):$(BUILD_TIME)
 
 pull:
-	docker pull $(NAME)
+	docker pull $(NAME):latest
