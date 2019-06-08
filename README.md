@@ -2,10 +2,10 @@
 
 ### How to run Workshop
  - `make pull` Downloads docker image from docker hub.
- - `make run` Run docker image, *notebooks* opened on port *9997*, *tensorboard* on port *22239*.
+ - `make run` Run docker image, *notebooks* opened on port *9997*.
 
 ### Materials
-Workshop presentation available [online](https://docs.google.com/presentation/d/1hRGbJaGzqyYR-2YkLJCGLKvdMUvuRUchIRYHsm2lLDE/edit?usp=sharing).  
+Workshop presentation available [online](https://docs.google.com/presentation/d/13NA9wlVpNyRfTS0WKgEFWHBXWKFEDTXJCuOo9e23-LY/edit?usp=sharing).  
 QA @ [mlcollege slack #image-processing](https://mlcollege.slack.com/messages/C9629K188/)  
 My public list of news from ML: [Research Monthly](https://docs.google.com/document/d/1Gq1peza9okW0XxszS7nMKSUvk68rxNfiWhDmZHLV0dU/edit?usp=sharing)
 
@@ -14,6 +14,7 @@ My public list of news from ML: [Research Monthly](https://docs.google.com/docum
  - [Chris Olah](http://colah.github.io/) Visualization of various ML concepts.
  - [Ference Huzsar](http://www.inference.vc/) More hardcore tech blog. Best ML blog of 2017 according to reddit.
  - [R2RT](https://r2rt.com/)
+ - [Fast AI](https://www.fast.ai/topics/#technical) Make deep learning uncool again.
 
 #### Videos
  - [Nando de Freitas # Oxford](https://www.youtube.com/user/ProfNandoDF/playlists)
