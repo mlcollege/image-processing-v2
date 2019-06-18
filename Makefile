@@ -4,10 +4,10 @@ BUILD_TIME=$(shell date -u +'%Y%m%dT%H%M%SZ')
 all: download build run
 
 run:
-	docker run -it -p 9997:8000 -p 6006:6006 -v $(shell pwd)/notebooks:/image_processing_workshop/notebooks $(NAME) ./run.sh
+	docker run -it --shm-size 8G -p 9997:8000 -p 6006:6006 -v $(shell pwd)/notebooks:/image_processing_workshop/notebooks $(NAME) ./run.sh
 
 run_terminal:
-	docker run -it -p 9997:8000 -p 6006:6006 -v $(shell pwd)/notebooks:/image_processing_workshop/notebooks $(NAME) /bin/bash
+	docker run -it --shm-size 8G -p 9997:8000 -p 6006:6006 -v $(shell pwd)/notebooks:/image_processing_workshop/notebooks $(NAME) /bin/bash
 
 stop:
 	docker stop $(NAME)
